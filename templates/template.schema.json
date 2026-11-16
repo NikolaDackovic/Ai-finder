@@ -1,0 +1,21 @@
+{
+  "variables": [
+    "GREETING",
+    "BUSINESS_INTRO",
+    "ANALYSIS_1",
+    "ANALYSIS_2",
+    "ANALYSIS_3",
+    "SOLUTION_1",
+    "SOLUTION_2",
+    "SOLUTION_3",
+    "ADDITIONAL_POINT",
+    "CTA",
+    "SIGNATURE"
+  ],
+  "rules": {
+    "keepStructure": true,
+    "neverInventFacts": true,
+    "useEvidence": true,
+    "language": "same as campaign input"
+  }
+}

@@ -1,0 +1,13 @@
+node_modules/
+.env
+data/leads/
+data/lead-history.json
+output/*
+!output/.gitkeep
+templates/master-offer.pdf
+src/resenje.pdf
+
+# Local debug and manual test scripts
+tmp-*.mjs
+lifecycle-check.mjs
+test-template-fix.mjs

@@ -1,0 +1,34 @@
+{{GREETING}}
+
+{{BUSINESS_INTRO}}
+
+ANALIZA VAŠEG SAJTA
+
+{{ANALYSIS_1}}
+
+{{ANALYSIS_2}}
+
+{{ANALYSIS_3}}
+
+Na osnovu navedenog, smatramo da postoji konkretan prostor za unapređenje korisničkog iskustva i automatizaciju dela komunikacije.
+
+REŠENJE
+
+{{SOLUTION_1}}
+
+{{SOLUTION_2}}
+
+{{SOLUTION_3}}
+
+{{ADDITIONAL_POINT}}
+
+DETALJNIJE REŠENJE
+
+Detaljan pregled funkcionalnosti i mogućnosti rešenja nalazi se u priloženom PDF dokumentu.
+
+{{CTA}}
+
+Više informacija:
+{{YOUR_WEBSITE}}
+
+{{SIGNATURE}}

@@ -1,0 +1,1833 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070914">
+  <title>AI Prospect Finder</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3 14.6 8.4 20 11l-5.4 2.6L12 19l-2.6-5.4L4 11l5.4-2.6L12 3Z"/>
+          <path d="m19.5 3.5.7 1.4 1.3.6-1.3.6-.7 1.4-.7-1.4-1.3-.6 1.3-.6.7-1.4Z"/>
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <h1 class="brand-title">AI Prospect Finder</h1>
+        <p class="brand-subtitle">Discovery, analiza i personalizacija poslovnih leadova</p>
+      </div>
+    </div>
+    <div class="system-status">
+      <span class="system-dot"></span>
+      <span>Sistem spreman</span>
+      <span id="providerLabel">AI: ...</span>
+    </div>
+  </header>
+
+  <section class="panel campaign">
+    <div class="campaign-head">
+      <div>
+        <h2 class="section-title">Nova kampanja</h2>
+        <p class="section-description">Definiši ciljnu grupu i pronađi najbolje potencijalne klijente.</p>
+      </div>
+      <div class="campaign-provider" id="campaignProvider">AI: učitavanje...</div>
+    </div>
+
+    <div class="campaign-grid">
+      <div class="field">
+        <label for="category">Kategorija</label>
+        <input id="category" value="stomatološke ordinacije" placeholder="npr. saloni lepote">
+      </div>
+      <div class="field">
+        <label for="location">Lokacija</label>
+        <input id="location" value="Srbija" placeholder="npr. Beograd">
+      </div>
+      <div class="field">
+        <label for="limit">Broj leadova</label>
+        <input id="limit" type="number" min="1" max="100" value="20">
+      </div>
+      <div class="field">
+        <label for="minScore">Minimalni score</label>
+        <input id="minScore" type="number" min="0" max="100" value="70">
+      </div>
+    </div>
+
+    <div class="campaign-footer">
+      <button class="primary-button" id="run" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-4-4"/>
+        </svg>
+        PRONAĐI I ANALIZIRAJ LEADOVE
+      </button>
+      <div class="status" id="status"></div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="stat-label">Pronađeno</div><div class="stat-value" id="statDiscovered">0</div></div>
+    <div class="stat"><div class="stat-label">Analizirano</div><div class="stat-value" id="statAnalyzed">0</div></div>
+    <div class="stat"><div class="stat-label">Qualified</div><div class="stat-value" id="statQualified">0</div></div>
+    <div class="stat"><div class="stat-label">Review</div><div class="stat-value" id="statReview">0</div></div>
+    <div class="stat"><div class="stat-label">Preskočeno</div><div class="stat-value" id="statSkipped">0</div></div>
+    <div class="stat"><div class="stat-label">Greške</div><div class="stat-value" id="statFailed">0</div></div>
+  </section>
+
+  <section class="panel leads-panel">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-4-4"/>
+        </svg>
+        <input id="searchInput" class="search-input" type="search" placeholder="Pretraži firmu, email ili sajt..." autocomplete="off">
+      </div>
+
+      <div class="filters">
+        <button class="filter-button active" data-filter="all" type="button">Svi</button>
+        <button class="filter-button" data-filter="qualified" type="button">Qualified</button>
+        <button class="filter-button" data-filter="ready" type="button">Ready</button>
+        <button class="filter-button" data-filter="sent" type="button">Sent</button>
+        <button class="filter-button" data-filter="follow-up" type="button">Follow-up</button>
+      </div>
+
+      <select id="sortSelect" class="sort-select">
+        <option value="score-desc">Score: najveći</option>
+        <option value="score-asc">Score: najmanji</option>
+        <option value="name-asc">Naziv: A-Z</option>
+        <option value="name-desc">Naziv: Z-A</option>
+      </select>
+    </div>
+
+    <div class="results-header">
+      <h2 class="results-title">Leadovi</h2>
+      <div class="results-count" id="resultsCount">0 leadova</div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="empty">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-4-4"/>
+          </svg>
+        </div>
+        <div class="empty-title">Još nema leadova</div>
+        <div class="empty-text">Pokreni kampanju da pronađemo prve potencijalne klijente.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <div class="modal-title-wrap">
+        <h2 id="modalTitle">Lead</h2>
+        <p id="modalSubtitle"></p>
+      </div>
+      <button class="close-button" id="closeModal" type="button" aria-label="Zatvori">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m6 6 12 12"/>
+          <path d="m18 6-12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const runButton = document.querySelector("#run");
+const statusEl = document.querySelector("#status");
+const resultsEl = document.querySelector("#results");
+const resultsCountEl = document.querySelector("#resultsCount");
+const searchInput = document.querySelector("#searchInput");
+const sortSelect = document.querySelector("#sortSelect");
+const modalBackdrop = document.querySelector("#modalBackdrop");
+const modalTitle = document.querySelector("#modalTitle");
+const modalSubtitle = document.querySelector("#modalSubtitle");
+const modalBody = document.querySelector("#modalBody");
+const closeModalButton = document.querySelector("#closeModal");
+const providerLabel = document.querySelector("#providerLabel");
+const campaignProvider = document.querySelector("#campaignProvider");
+const statDiscovered = document.querySelector("#statDiscovered");
+const statAnalyzed = document.querySelector("#statAnalyzed");
+const statQualified = document.querySelector("#statQualified");
+const statReview = document.querySelector("#statReview");
+const statSkipped = document.querySelector("#statSkipped");
+const statFailed = document.querySelector("#statFailed");
+const toastContainer = document.querySelector("#toastContainer");
+
+let latestCampaign = null;
+let activeFilter = "all";
+
+function setStatus(message, type = "") {
+  statusEl.textContent = message || "";
+  statusEl.className = "status";
+  if (type) {
+    statusEl.classList.add(type);
+  }
+}
+
+async function getStatus() {
+  const response = await fetch("/api/status", {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("Status API nije dostupan.");
+  }
+
+  return response.json();
+}
+
+async function refresh() {
+  try {
+    const data = await getStatus();
+    updateProvider(data);
+
+    if (data.running) {
+      runButton.disabled = true;
+      setStatus("Kampanja trenutno radi...");
+      return;
+    }
+
+    runButton.disabled = false;
+
+    if (data.lastRun?.error) {
+      setStatus(data.lastRun.error, "error");
+      return;
+    }
+
+    if (data.lastRun) {
+      latestCampaign = data.lastRun;
+      renderCampaign(data.lastRun);
+    }
+  } catch (error) {
+    setStatus(
+      error?.message || "Greška pri učitavanju statusa.",
+      "error"
+    );
+  }
+}
+
+function updateProvider(data) {
+  const provider = data.configured?.provider || "unknown";
+  const model = data.configured?.model || "";
+  const text = "AI: " + provider + (model ? " / " + model : "");
+
+  providerLabel.textContent = text;
+  campaignProvider.textContent = text;
+}
+
+function renderCampaign(data) {
+  if (!data) {
+    return;
+  }
+
+  statDiscovered.textContent = data.discovered ?? 0;
+  statAnalyzed.textContent = data.analyzed ?? 0;
+  statQualified.textContent = data.qualified ?? 0;
+  statReview.textContent = data.review ?? 0;
+  statSkipped.textContent = data.skipped ?? 0;
+  statFailed.textContent = data.failed ?? 0;
+
+  if (data.error) {
+    setStatus(data.error, "error");
+    return;
+  }
+
+  setStatus("Kampanja završena.", "success");
+  renderResults();
+}
+
+function getFilteredResults() {
+  const source = Array.isArray(latestCampaign?.results)
+    ? latestCampaign.results
+    : [];
+
+  const search = searchInput.value.trim().toLowerCase();
+
+  const filtered = source.filter((lead) => {
+    const status = normalizeLeadStatus(lead);
+
+    if (activeFilter !== "all" && status !== activeFilter) {
+      return false;
+    }
+
+    if (!search) {
+      return true;
+    }
+
+    const haystack = [
+      lead.businessName,
+      lead.email,
+      lead.url
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(search);
+  });
+
+  const sort = sortSelect.value;
+
+  filtered.sort((a, b) => {
+    if (sort === "score-desc") {
+      return Number(b.score || 0) - Number(a.score || 0);
+    }
+
+    if (sort === "score-asc") {
+      return Number(a.score || 0) - Number(b.score || 0);
+    }
+
+    const aName = String(a.businessName || "").toLowerCase();
+    const bName = String(b.businessName || "").toLowerCase();
+
+    if (sort === "name-desc") {
+      return bName.localeCompare(aName);
+    }
+
+    return aName.localeCompare(bName);
+  });
+
+  return filtered;
+}
+
+function renderResults() {
+  const filtered = getFilteredResults();
+
+  resultsCountEl.textContent =
+    filtered.length === 1
+      ? "1 lead"
+      : filtered.length + " leadova";
+
+  if (!filtered.length) {
+    resultsEl.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-4-4"/>
+          </svg>
+        </div>
+        <div class="empty-title">Nema rezultata</div>
+        <div class="empty-text">Pokušaj drugačiji filter ili pretragu.</div>
+      </div>
+    `;
+    return;
+  }
+
+  resultsEl.innerHTML = filtered.map(renderLeadCard).join("");
+}
+
+function renderLeadCard(lead) {
+  const score = Number(lead.score || 0);
+  const status = normalizeLeadStatus(lead);
+  const statusText = getStatusText(status);
+  const sent = isSentStatus(status);
+
+  return `
+    <article
+      class="lead-card"
+      data-folder="${escapeAttr(lead.folder)}"
+    >
+      <div class="lead-top">
+        <div class="lead-info">
+          <h3 class="lead-title">
+            ${escapeHtml(lead.businessName || "Nepoznat biznis")}
+          </h3>
+
+          <div class="lead-email">
+            ${escapeHtml(lead.email || "Email nije pronađen")}
+          </div>
+
+          <a
+            class="lead-url"
+            href="${escapeAttr(lead.url)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-stop-propagation="true"
+          >
+            ${escapeHtml(lead.url || "")}
+          </a>
+        </div>
+
+        <div class="score">
+          <div class="score-number">${score}</div>
+          <div class="score-caption">${statusText}</div>
+        </div>
+      </div>
+
+      <div class="lead-divider"></div>
+
+      <div class="lead-bottom">
+        <div class="lead-status">
+          <span class="status-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              ${getStatusIcon(status)}
+            </svg>
+          </span>
+          ${statusText}
+        </div>
+
+        <div class="lead-actions">
+          <button
+            class="icon-button"
+            type="button"
+            title="Otvori email"
+            aria-label="Otvori email"
+            data-action="email"
+            data-folder="${escapeAttr(lead.folder)}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <path d="m3 7 9 6 9-6"/>
+            </svg>
+          </button>
+
+          <button
+            class="icon-button"
+            type="button"
+            title="Otvori PDF"
+            aria-label="Otvori PDF"
+            data-action="pdf"
+            data-folder="${escapeAttr(lead.folder)}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M8 13h8"/>
+              <path d="M8 17h5"/>
+            </svg>
+          </button>
+
+          <button
+            class="icon-button"
+            type="button"
+            title="Otvori sajt"
+            aria-label="Otvori sajt"
+            data-action="website"
+            data-url="${escapeAttr(lead.url)}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M3 12h18"/>
+              <path d="M12 3a14 14 0 0 1 0 18"/>
+            </svg>
+          </button>
+
+          ${
+            sent
+              ? ""
+              : `
+                <button
+                  class="icon-button"
+                  type="button"
+                  title="Pošalji email"
+                  aria-label="Pošalji email"
+                  data-action="send"
+                  data-folder="${escapeAttr(lead.folder)}"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m22 2-7 20-4-9-9-4Z"/>
+                    <path d="M22 2 11 13"/>
+                  </svg>
+                </button>
+              `
+          }
+
+          <button
+            class="icon-button primary"
+            type="button"
+            title="Otvori kompletnu analizu"
+            data-action="view"
+            data-folder="${escapeAttr(lead.folder)}"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18 15 12 9 6"/>
+            </svg>
+            <span>ANALIZA</span>
+          </button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+async function openLead(folder) {
+  if (!folder) {
+    showToast("Folder leada nije pronađen.");
+    return;
+  }
+
+  openModal();
+
+  modalTitle.textContent = "Učitavam lead...";
+  modalSubtitle.textContent = "";
+
+  modalBody.innerHTML = `
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      Učitavam kompletnu analizu...
+    </div>
+  `;
+
+  try {
+    const response = await fetch(
+      "/api/lead?folder=" + encodeURIComponent(folder),
+      { cache: "no-store" }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Lead nije moguće učitati."
+      );
+    }
+
+    renderLeadDetails(data.lead);
+  } catch (error) {
+    modalBody.innerHTML = `
+      <div class="empty">
+        <div class="empty-title">Nije moguće učitati lead</div>
+        <div class="empty-text">
+          ${escapeHtml(error?.message || "Greška.")}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function renderLeadDetails(lead) {
+  const analysis = lead?.analysis || {};
+  const contact = lead?.contact || {};
+  const website = lead?.website || {};
+  const qualification = analysis?.qualification || {};
+  const send = lead?.send || {};
+
+  const score = Number(analysis.leadScore || 0);
+  const observations = toArray(analysis.observations);
+  const problems = toArray(analysis.problems);
+  const solutions = toArray(analysis.solutions);
+  const features = toArray(analysis.recommendedFeatures);
+  const scoreReasons = toArray(analysis.scoreReasons);
+  const warnings = toArray(analysis.confidenceWarnings);
+  const pages = Array.isArray(website.pagesCrawled)
+    ? website.pagesCrawled
+    : [];
+
+  const emailText = contact.generatedText || "";
+  const emailHtml = contact.generatedHtml || "";
+  const sourceUrl = lead?.source?.url || website.url || "";
+  const folder = lead.folder || leadFolderFromLead(lead);
+  const currentStatus = normalizeLeadStatus(lead);
+  const sent = isSentStatus(currentStatus);
+
+  modalTitle.textContent =
+    analysis.businessName ||
+    lead?.source?.title ||
+    "Nepoznat biznis";
+
+  modalSubtitle.textContent = sourceUrl;
+
+  modalBody.innerHTML = `
+    <div class="modal-actions">
+      <button class="action-button" id="copyEmailButton" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="11" height="11" rx="2"/>
+          <path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/>
+        </svg>
+        KOPIRAJ EMAIL
+      </button>
+
+      <button class="action-button" id="openEmailButton" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+          <path d="m3 7 9 6 9-6"/>
+        </svg>
+        EMAIL
+      </button>
+
+      <button class="action-button" id="openHtmlButton" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m8 9-4 3 4 3"/>
+          <path d="m16 9 4 3-4 3"/>
+          <path d="m14 5-4 14"/>
+        </svg>
+        HTML EMAIL
+      </button>
+
+      <button class="action-button" id="openPdfButton" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+          <path d="M14 2v6h6"/>
+        </svg>
+        PDF
+      </button>
+
+      <button class="action-button" id="openAnalysisButton" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 20V10"/>
+          <path d="M12 20V4"/>
+          <path d="M19 20v-7"/>
+        </svg>
+        ANALIZA TXT
+      </button>
+
+      <button class="action-button" id="openWebsiteButton" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M3 12h18"/>
+          <path d="M12 3a14 14 0 0 1 0 18"/>
+        </svg>
+        SAJT
+      </button>
+
+      ${
+        sent
+          ? `
+            <div
+              style="
+                display:inline-flex;
+                align-items:center;
+                gap:7px;
+                min-height:35px;
+                padding:0 11px;
+                border:1px solid rgba(72,216,160,.20);
+                border-radius:9px;
+                background:rgba(72,216,160,.07);
+                color:#48D8A0;
+                font-size:9px;
+                font-weight:800;
+              "
+            >
+              SENT
+            </div>
+          `
+          : `
+            <button class="action-button" id="sendLeadButton" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z"/>
+                <path d="M22 2 11 13"/>
+              </svg>
+              POŠALJI EMAIL
+            </button>
+          `
+      }
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-box score-detail">
+        <div class="detail-label">Lead score</div>
+        <div class="detail-value">${score}</div>
+      </div>
+
+      <div class="detail-box">
+        <div class="detail-label">Status</div>
+        <div class="detail-value">
+          ${escapeHtml(getStatusText(currentStatus))}
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div class="detail-label">Outreach status</div>
+        <div class="detail-value">
+          ${escapeHtml(lead.outreachStatus || lead.send?.status || lead.status || "READY")}
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div class="detail-label">Kategorija</div>
+        <div class="detail-value">
+          ${escapeHtml(analysis.category || "nije utvrđeno")}
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div class="detail-label">Grad</div>
+        <div class="detail-value">
+          ${escapeHtml(analysis.city || "nije utvrđeno")}
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div class="detail-label">Email</div>
+        <div class="detail-value">
+          ${escapeHtml(contact.email || "N/A")}
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div class="detail-label">Confidence</div>
+        <div class="detail-value">
+          ${escapeHtml(contact.confidence ?? "N/A")}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <h3 class="detail-section-title">Outreach lifecycle</h3>
+      </div>
+      <div class="detail-section-body">
+        <div class="status-row">
+          ${renderStatusItem("Ready", getLifecycleStateLabel(lead, "READY"))}
+          ${renderStatusItem("Test sent", getLifecycleStateLabel(lead, "TEST_SENT"))}
+          ${renderStatusItem("Sent", getLifecycleStateLabel(lead, "SENT"))}
+          ${renderStatusItem("Follow-up", getLifecycleStateLabel(lead, "FOLLOW-UP"))}
+          ${renderStatusItem("Replied", getLifecycleStateLabel(lead, "REPLIED"))}
+          ${renderStatusItem("Closed", getLifecycleStateLabel(lead, "CLOSED"))}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <h3 class="detail-section-title">Email status</h3>
+      </div>
+      <div class="detail-section-body">
+        <div class="status-row">
+          ${renderStatusItem("Outreach status", lead.outreachStatus || lead.send?.status || lead.status || "READY")}
+          ${renderStatusItem("Poslat na", lead.sentTo || send.sentTo || contact.email || "N/A")}
+          ${renderStatusItem("Subject", lead.subject || send.subject || "N/A")}
+          ${renderStatusItem("Message ID", lead.messageId || send.messageId || "N/A")}
+          ${renderStatusItem("Vreme slanja", formatDate(lead.sentAt || send.sentAt))}
+          ${renderStatusItem("Last action", formatDate(lead.lastActionAt))}
+          ${renderStatusItem("Follow-up", formatDate(lead.followUpAt))}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <h3 class="detail-section-title">Follow-up scheduling</h3>
+      </div>
+      <div class="detail-section-body">
+        <div style="display:grid;gap:10px;max-width:350px;">
+          <label style="display:block;color:#8D879A;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;">
+            Follow-up date
+          </label>
+          <input id="followUpDateInput" type="date" value="${escapeAttr(getFollowUpDateValue(lead))}" style="width:100%;min-height:42px;padding:0 12px;border:1px solid rgba(126,132,192,.16);border-radius:10px;outline:none;background:rgba(7,10,22,.78);color:#F4F2FF;font-size:12px;" />
+          <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+            <button class="action-button" id="scheduleFollowUpButton" type="button">ZAPISATI FOLLOW-UP</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <h3 class="detail-section-title">Website status</h3>
+      </div>
+      <div class="detail-section-body">
+        <div class="status-row">
+          ${renderStatusItem("Chatbot", analysis.chatbotStatus)}
+          ${renderStatusItem("Booking", analysis.bookingStatus)}
+          ${renderStatusItem("Kontakt", analysis.contactStatus)}
+        </div>
+      </div>
+    </div>
+
+    ${renderListSection(
+      "Website summary",
+      analysis.websiteSummary ? [analysis.websiteSummary] : []
+    )}
+
+    ${renderListSection(
+      "Zašto je ovaj score?",
+      scoreReasons
+    )}
+
+    ${renderListSection(
+      "Observations",
+      observations
+    )}
+
+    ${renderListSection(
+      "Problems",
+      problems
+    )}
+
+    ${renderListSection(
+      "Solutions",
+      solutions
+    )}
+
+    ${renderListSection(
+      "Recommended features",
+      features
+    )}
+
+    ${renderListSection(
+      "Warnings",
+      warnings
+    )}
+
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <div class="email-heading">
+          <h3 class="detail-section-title">Generated email</h3>
+          <div class="email-tabs">
+            <button class="email-tab active" id="emailTextTab" type="button">TEXT</button>
+            <button class="email-tab" id="emailHtmlTab" type="button">HTML</button>
+          </div>
+        </div>
+        <div class="email-format-label" id="emailFormatLabel">Plain text</div>
+      </div>
+
+      <div class="detail-section-body">
+        <div id="emailTextView">
+          <div class="email-preview" id="emailPreview">
+            ${escapeHtml(emailText || "Email nije pronađen.")}
+          </div>
+        </div>
+
+        <div id="emailHtmlView" style="display:none;">
+          <div class="html-email-note">
+            Live preview HTML emaila.
+          </div>
+          <div class="html-email-frame-wrap">
+            <iframe
+              id="emailHtmlFrame"
+              title="HTML email preview"
+              class="email-html-frame"
+              sandbox
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <h3 class="detail-section-title">
+          Website sources (${pages.length})
+        </h3>
+      </div>
+
+      <div class="detail-section-body">
+        ${
+          pages.length
+            ? `
+              <ul class="detail-list source-list">
+                ${pages
+                  .map(
+                    (url) => `
+                      <li>
+                        <a
+                          href="${escapeAttr(url)}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          ${escapeHtml(url)}
+                        </a>
+                      </li>
+                    `
+                  )
+                  .join("")}
+              </ul>
+            `
+            : `<p class="summary-text">Nema sačuvanih izvora.</p>`
+        }
+      </div>
+    </div>
+  `;
+
+  const copyEmailButton = document.querySelector("#copyEmailButton");
+  const openEmailButton = document.querySelector("#openEmailButton");
+  const openHtmlButton = document.querySelector("#openHtmlButton");
+  const openPdfButton = document.querySelector("#openPdfButton");
+  const openAnalysisButton = document.querySelector("#openAnalysisButton");
+  const openWebsiteButton = document.querySelector("#openWebsiteButton");
+  const sendLeadButton = document.querySelector("#sendLeadButton");
+
+  const emailTextTab = document.querySelector("#emailTextTab");
+  const emailHtmlTab = document.querySelector("#emailHtmlTab");
+  const emailTextView = document.querySelector("#emailTextView");
+  const emailHtmlView = document.querySelector("#emailHtmlView");
+  const emailFormatLabel = document.querySelector("#emailFormatLabel");
+  const emailHtmlFrame = document.querySelector("#emailHtmlFrame");
+
+  if (emailHtmlFrame) {
+    emailHtmlFrame.srcdoc = emailHtml || `
+      <!doctype html>
+      <html>
+        <body style="font-family:Arial,sans-serif;padding:30px;color:#666;">
+          HTML email nije pronađen.
+        </body>
+      </html>
+    `;
+  }
+
+  if (emailTextTab && emailHtmlTab) {
+    emailTextTab.addEventListener("click", () => {
+      emailTextView.style.display = "block";
+      emailHtmlView.style.display = "none";
+      emailTextTab.classList.add("active");
+      emailHtmlTab.classList.remove("active");
+      emailFormatLabel.textContent = "Plain text";
+    });
+
+    emailHtmlTab.addEventListener("click", () => {
+      emailTextView.style.display = "none";
+      emailHtmlView.style.display = "block";
+      emailHtmlTab.classList.add("active");
+      emailTextTab.classList.remove("active");
+      emailFormatLabel.textContent = "HTML preview";
+    });
+  }
+
+  if (copyEmailButton) {
+    copyEmailButton.addEventListener("click", async () => {
+      if (!emailText) {
+        showToast("Email nije dostupan.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(emailText);
+        showToast("Email je kopiran.");
+      } catch {
+        showToast("Nije moguće kopirati email.");
+      }
+    });
+  }
+
+  if (openEmailButton) {
+    openEmailButton.addEventListener("click", () => {
+      openFile(folder, "email.txt");
+    });
+  }
+
+  if (openHtmlButton) {
+    openHtmlButton.addEventListener("click", () => {
+      openFile(folder, "email.html");
+    });
+  }
+
+  if (openPdfButton) {
+    openPdfButton.addEventListener("click", () => {
+      openFile(folder, "offer.pdf");
+    });
+  }
+
+  if (openAnalysisButton) {
+    openAnalysisButton.addEventListener("click", () => {
+      openFile(folder, "analysis.txt");
+    });
+  }
+
+  if (openWebsiteButton) {
+    openWebsiteButton.addEventListener("click", () => {
+      if (sourceUrl) {
+        window.open(sourceUrl, "_blank", "noopener,noreferrer");
+      }
+    });
+  }
+
+  if (sendLeadButton) {
+    sendLeadButton.addEventListener("click", () => {
+      openSendConfirmation(lead, folder);
+    });
+  }
+
+  const scheduleFollowUpButton = document.querySelector("#scheduleFollowUpButton");
+  if (scheduleFollowUpButton) {
+    scheduleFollowUpButton.addEventListener("click", async () => {
+      const followUpDate = document.querySelector("#followUpDateInput")?.value;
+      if (!followUpDate) {
+        showToast("Izaberi datum follow-upa.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/lead-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            folder,
+            status: "follow-up",
+            followUpAt: new Date(followUpDate).toISOString()
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Follow-up status nije podešen.");
+        }
+
+        showToast("Follow-up je zakazan.");
+        openLead(folder);
+      } catch (error) {
+        showToast(error?.message || "Greška pri zakazivanju follow-upa.");
+      }
+    });
+  }
+}
+
+function openSendConfirmation(lead, folder) {
+  const analysis = lead?.analysis || {};
+  const contact = lead?.contact || {};
+  const send = lead?.send || {};
+
+  const businessName =
+    analysis.businessName ||
+    lead?.source?.title ||
+    "Nepoznat biznis";
+
+  const recipient =
+    contact.email ||
+    lead?.email ||
+    "";
+
+  const html =
+    contact.generatedHtml ||
+    "";
+
+  const text =
+    contact.generatedText ||
+    "";
+
+if (isSentStatus(normalizeLeadStatus(lead))) {
+    showToast("Email za ovaj lead je već poslat.");
+    return;
+  }
+
+  modalTitle.textContent = "Pošalji email";
+  modalSubtitle.textContent = businessName;
+
+  modalBody.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <h3 class="detail-section-title">Potvrda slanja</h3>
+      </div>
+
+      <div class="detail-section-body">
+        <div
+          style="
+            margin-bottom:14px;
+            padding:13px 14px;
+            border:1px solid rgba(139,92,246,.16);
+            border-radius:11px;
+            background:rgba(139,92,246,.05);
+            color:#BDB4D1;
+            font-size:11px;
+            line-height:1.7;
+          "
+        >
+          Proveri primaoca i naslov pre slanja. Email će biti poslat kao HTML uz plain-text fallback.
+        </div>
+
+        <div style="display:grid;gap:12px;">
+          <div>
+            <label
+              for="sendRecipient"
+              style="display:block;margin-bottom:6px;color:#8D879A;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;"
+            >
+              Primaoc
+            </label>
+            <input
+              id="sendRecipient"
+              type="email"
+              value="${escapeAttr(recipient)}"
+              autocomplete="email"
+              style="width:100%;min-height:42px;padding:0 12px;border:1px solid rgba(126,132,192,.16);border-radius:10px;outline:none;background:rgba(7,10,22,.78);color:#F4F2FF;font-size:12px;"
+            >
+          </div>
+
+          <div>
+            <label
+              for="sendSubject"
+              style="display:block;margin-bottom:6px;color:#8D879A;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;"
+            >
+              Subject
+            </label>
+            <input
+              id="sendSubject"
+              type="text"
+              value="${escapeAttr(
+                send.subject ||
+                "Personalizovana analiza sajta i predlog unapređenja"
+              )}"
+              style="width:100%;min-height:42px;padding:0 12px;border:1px solid rgba(126,132,192,.16);border-radius:10px;outline:none;background:rgba(7,10,22,.78);color:#F4F2FF;font-size:12px;"
+            >
+          </div>
+
+          <div>
+            <label
+              style="display:block;margin-bottom:6px;color:#8D879A;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;"
+            >
+              HTML preview
+            </label>
+            <div class="html-email-frame-wrap">
+              <iframe
+                id="sendHtmlFrame"
+                title="Email preview"
+                class="email-html-frame"
+                sandbox
+              ></iframe>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:3px;">
+            <button class="action-button" id="cancelSendButton" type="button">
+              OTKAŽI
+            </button>
+
+            <button
+              class="action-button"
+              id="confirmSendButton"
+              type="button"
+              style="border-color:rgba(72,216,160,.24);background:rgba(72,216,160,.08);color:#48D8A0;"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z"/>
+                <path d="M22 2 11 13"/>
+              </svg>
+              POŠALJI
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const sendHtmlFrame =
+    document.querySelector("#sendHtmlFrame");
+
+  const cancelSendButton =
+    document.querySelector("#cancelSendButton");
+
+  const confirmSendButton =
+    document.querySelector("#confirmSendButton");
+
+  if (sendHtmlFrame) {
+    sendHtmlFrame.srcdoc = html || `
+      <!doctype html>
+      <html>
+        <body style="font-family:Arial,sans-serif;padding:30px;color:#666;">
+          HTML email nije pronađen.
+        </body>
+      </html>
+    `;
+  }
+
+  if (cancelSendButton) {
+    cancelSendButton.addEventListener("click", () => {
+      renderLeadDetails(lead);
+    });
+  }
+
+  if (confirmSendButton) {
+    confirmSendButton.addEventListener("click", async () => {
+      const recipientInput =
+        document.querySelector("#sendRecipient");
+
+      const subjectInput =
+        document.querySelector("#sendSubject");
+
+      const recipient =
+        recipientInput?.value.trim() || "";
+
+      const subject =
+        subjectInput?.value.trim() || "";
+
+      if (!recipient) {
+        showToast("Primaoc je obavezan.");
+        recipientInput?.focus();
+        return;
+      }
+
+      if (!isValidEmail(recipient)) {
+        showToast("Unesi ispravnu email adresu.");
+        recipientInput?.focus();
+        return;
+      }
+
+      if (!subject) {
+        showToast("Subject je obavezan.");
+        subjectInput?.focus();
+        return;
+      }
+
+      confirmSendButton.disabled = true;
+
+      if (cancelSendButton) {
+        cancelSendButton.disabled = true;
+      }
+
+      confirmSendButton.textContent = "SLANJE...";
+
+      try {
+        const response = await fetch(
+          "/api/send-email",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              folder,
+              recipient,
+              subject
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error ||
+            "Slanje emaila nije uspelo."
+          );
+        }
+
+        const sentAt =
+          data.send?.sentAt ||
+          new Date().toISOString();
+
+        updateCampaignLeadAsSent(
+          lead,
+          {
+            sentTo: recipient,
+            subject,
+            sentAt,
+            messageId: data.send?.messageId || null
+          }
+        );
+
+        showToast("Email je uspešno poslat.");
+
+        renderResults();
+
+        modalTitle.textContent =
+          "Email uspešno poslat";
+
+        modalSubtitle.textContent =
+          businessName;
+
+        modalBody.innerHTML = `
+          <div class="detail-section">
+            <div class="detail-section-head">
+              <h3 class="detail-section-title">Slanje uspešno</h3>
+            </div>
+
+            <div class="detail-section-body">
+              <div
+                style="padding:18px;border:1px solid rgba(72,216,160,.18);border-radius:13px;background:rgba(72,216,160,.05);"
+              >
+                <div style="color:#48D8A0;font-size:14px;font-weight:800;">
+                  EMAIL SENT
+                </div>
+
+                <div style="margin-top:9px;color:#B8B2C6;font-size:11px;line-height:1.7;">
+                  Email je uspešno poslat na:
+                </div>
+
+                <div style="margin-top:3px;color:#F4F2FF;font-size:13px;font-weight:700;">
+                  ${escapeHtml(recipient)}
+                </div>
+
+                <div style="margin-top:8px;color:#777C97;font-size:10px;">
+                  ${escapeHtml(formatDate(sentAt))}
+                </div>
+
+                ${
+                  data.send?.messageId
+                    ? `
+                      <div style="margin-top:10px;color:#777C97;font-size:9px;line-height:1.6;word-break:break-all;">
+                        Message ID: ${escapeHtml(data.send.messageId)}
+                      </div>
+                    `
+                    : ""
+                }
+              </div>
+
+              <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+                <button class="action-button" id="closeAfterSendButton" type="button">
+                  ZATVORI
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document
+          .querySelector("#closeAfterSendButton")
+          ?.addEventListener("click", closeModal);
+
+      } catch (error) {
+        showToast(
+          error?.message ||
+          "Slanje emaila nije uspelo."
+        );
+
+        confirmSendButton.disabled = false;
+
+        if (cancelSendButton) {
+          cancelSendButton.disabled = false;
+        }
+
+        confirmSendButton.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m22 2-7 20-4-9-9-4Z"/>
+            <path d="M22 2 11 13"/>
+          </svg>
+          POŠALJI
+        `;
+      }
+    });
+  }
+}
+
+function updateCampaignLeadAsSent(
+  lead,
+  sendData
+) {
+  if (
+    !latestCampaign ||
+    !Array.isArray(latestCampaign.results)
+  ) {
+    return;
+  }
+
+  const folder =
+    lead?.folder ||
+    leadFolderFromLead(lead);
+
+  const target =
+    latestCampaign.results.find(
+      (item) => item.folder === folder
+    );
+
+  if (!target) {
+    return;
+  }
+
+  target.outreachStatus = "SENT";
+  target.status = "SENT";
+  target.sentAt = sendData.sentAt;
+  target.sentTo = sendData.sentTo;
+  target.subject = sendData.subject;
+  target.messageId = sendData.messageId;
+  target.lastActionAt = sendData.sentAt;
+  target.send = {
+    status: "SENT",
+    sentTo: sendData.sentTo,
+    subject: sendData.subject,
+    sentAt: sendData.sentAt,
+    messageId: sendData.messageId
+  };
+}
+
+function renderStatusItem(label, value) {
+  return `
+    <div class="status-item">
+      <div class="label">${escapeHtml(label)}</div>
+      <div class="value">
+        ${escapeHtml(value || "nije utvrđeno")}
+      </div>
+    </div>
+  `;
+}
+
+function renderListSection(title, items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return `
+      <div class="detail-section">
+        <div class="detail-section-head">
+          <h3 class="detail-section-title">
+            ${escapeHtml(title)}
+          </h3>
+        </div>
+        <div class="detail-section-body">
+          <p class="summary-text">Nije pronađeno.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="detail-section">
+      <div class="detail-section-head">
+        <h3 class="detail-section-title">
+          ${escapeHtml(title)}
+        </h3>
+      </div>
+      <div class="detail-section-body">
+        <ul class="detail-list">
+          ${items
+            .map(
+              (item) => `
+                <li>${escapeHtml(item)}</li>
+              `
+            )
+            .join("")}
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+function leadFolderFromLead(lead) {
+  if (lead?.folder) {
+    return lead.folder;
+  }
+
+  const sourceUrl =
+    lead?.source?.url ||
+    lead?.website?.url ||
+    "";
+
+  const match =
+    (latestCampaign?.results || []).find(
+      (result) => result.url === sourceUrl
+    );
+
+  return match?.folder || "";
+}
+
+function openFile(folder, file) {
+  if (!folder) {
+    showToast("Folder leada nije pronađen.");
+    return;
+  }
+
+  const url =
+    "/api/lead-file?folder=" +
+    encodeURIComponent(folder) +
+    "&file=" +
+    encodeURIComponent(file);
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+function openModal() {
+  modalBackdrop.classList.add("open");
+  modalBackdrop.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  modalBackdrop.classList.remove("open");
+  modalBackdrop.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+runButton.addEventListener("click", async () => {
+  runButton.disabled = true;
+  setStatus("Pokrećem discovery...");
+
+  const category =
+    document.querySelector("#category").value.trim();
+
+  const location =
+    document.querySelector("#location").value.trim();
+
+  const limit = Number(
+    document.querySelector("#limit").value
+  );
+
+  const minScore = Number(
+    document.querySelector("#minScore").value
+  );
+
+  if (!category || !location) {
+    setStatus(
+      "Kategorija i lokacija su obavezne.",
+      "error"
+    );
+    runButton.disabled = false;
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "/api/campaign",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          category,
+          location,
+          limit,
+          minScore
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "Greška pri pokretanju kampanje."
+      );
+    }
+
+    setStatus("Kampanja pokrenuta...");
+    poll();
+  } catch (error) {
+    setStatus(
+      error?.message || "Greška.",
+      "error"
+    );
+    runButton.disabled = false;
+  }
+});
+
+async function poll() {
+  try {
+    const data = await getStatus();
+
+    if (data.running) {
+      runButton.disabled = true;
+      setStatus("Kampanja radi...");
+      setTimeout(poll, 1500);
+      return;
+    }
+
+    if (data.lastRun) {
+      latestCampaign = data.lastRun;
+      renderCampaign(data.lastRun);
+    }
+
+    runButton.disabled = false;
+  } catch (error) {
+    setStatus(
+      error?.message ||
+      "Greška pri proveri statusa.",
+      "error"
+    );
+    runButton.disabled = false;
+  }
+}
+
+searchInput.addEventListener("input", () => {
+  if (latestCampaign) {
+    renderResults();
+  }
+});
+
+sortSelect.addEventListener("change", () => {
+  if (latestCampaign) {
+    renderResults();
+  }
+});
+
+document
+  .querySelectorAll(".filter-button")
+  .forEach((button) => {
+    button.addEventListener("click", () => {
+      document
+        .querySelectorAll(".filter-button")
+        .forEach((item) => {
+          item.classList.remove("active");
+        });
+
+      button.classList.add("active");
+      activeFilter = button.dataset.filter || "all";
+
+      if (latestCampaign) {
+        renderResults();
+      }
+    });
+  });
+
+resultsEl.addEventListener("click", (event) => {
+  const link = event.target.closest(
+    '[data-stop-propagation="true"]'
+  );
+
+  if (link) {
+    return;
+  }
+
+  const actionButton =
+    event.target.closest("[data-action]");
+
+  if (actionButton) {
+    event.stopPropagation();
+
+    const action =
+      actionButton.dataset.action;
+
+    const folder =
+      actionButton.dataset.folder || "";
+
+    if (action === "view") {
+      openLead(folder);
+      return;
+    }
+
+    if (action === "email") {
+      openFile(folder, "email.txt");
+      return;
+    }
+
+    if (action === "pdf") {
+      openFile(folder, "offer.pdf");
+      return;
+    }
+
+    if (action === "send") {
+      openLead(folder);
+      return;
+    }
+
+    if (action === "website") {
+      const url =
+        actionButton.dataset.url || "";
+
+      if (url) {
+        window.open(
+          url,
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }
+    }
+
+    return;
+  }
+
+  const card =
+    event.target.closest(".lead-card");
+
+  if (card) {
+    openLead(card.dataset.folder);
+  }
+});
+
+closeModalButton.addEventListener(
+  "click",
+  closeModal
+);
+
+modalBackdrop.addEventListener(
+  "click",
+  (event) => {
+    if (event.target === modalBackdrop) {
+      closeModal();
+    }
+  }
+);
+
+document.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key === "Escape") {
+      closeModal();
+    }
+  }
+);
+
+function normalizeLeadStatus(lead) {
+  const raw = String(
+    lead?.outreachStatus ||
+    lead?.send?.status ||
+    lead?.status || ""
+  ).trim();
+
+  const value = raw.toLowerCase();
+
+  if (["test_sent", "sent"].includes(value)) {
+    return "sent";
+  }
+
+  if (value === "ready") {
+    return "ready";
+  }
+
+  if (value === "qualified") {
+    return "qualified";
+  }
+
+  if (value === "review" || value === "ready_for_review") {
+    return "review";
+  }
+
+  if (["replied", "follow-up", "follow_up", "followup"].includes(value)) {
+    return "follow-up";
+  }
+
+  if (value === "closed") {
+    return "closed";
+  }
+
+  return "review";
+}
+
+function isSentStatus(status) {
+  return ["sent", "test_sent", "replied", "follow-up", "closed"].includes(String(status || "").toLowerCase());
+}
+
+function getStatusText(status) {
+  if (status === "qualified") {
+    return "QUALIFIED";
+  }
+
+  if (status === "ready") {
+    return "READY";
+  }
+
+  if (status === "sent") {
+    return "SENT";
+  }
+
+  if (status === "follow-up") {
+    return "FOLLOW-UP";
+  }
+
+  if (status === "replied") {
+    return "REPLIED";
+  }
+
+  if (status === "closed") {
+    return "CLOSED";
+  }
+
+  if (status === "test_sent") {
+    return "TEST SENT";
+  }
+
+  return "REVIEW";
+}
+
+function getLifecycleStateLabel(lead, state) {
+  const current = String(
+    lead?.outreachStatus ||
+    lead?.send?.status ||
+    lead?.status || "READY"
+  ).trim().toUpperCase();
+
+  return current === state ? "✓" : "—";
+}
+
+function getFollowUpDateValue(lead) {
+  const value = lead?.followUpAt || null;
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
+function getStatusIcon(status) {
+  if (["sent", "qualified", "ready", "follow-up", "replied", "closed"].includes(String(status || "").toLowerCase())) {
+    return `
+      <path d="m5 12 4 4L19 6"/>
+    `;
+  }
+
+  return `
+    <path d="M12 8v5"/>
+    <path d="M12 16h.01"/>
+  `;
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "N/A";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleString("sr-RS");
+}
+
+function showToast(message) {
+  const toast =
+    document.createElement("div");
+
+  toast.className = "toast";
+
+  toast.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12 4 4L19 6"/>
+    </svg>
+    <span>${escapeHtml(message)}</span>
+  `;
+
+  toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 2200);
+}
+
+function toArray(value) {
+  return Array.isArray(value)
+    ? value.filter(Boolean)
+    : [];
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    function (character) {
+      const map = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      };
+
+      return map[character];
+    }
+  );
+}
+
+function escapeAttr(value) {
+  return escapeHtml(
+    String(value ?? "").replace(/[\r\n]/g, "")
+  );
+}
+
+refresh();
+</script>
+
+</body>
+</html>
